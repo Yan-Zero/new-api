@@ -3,13 +3,14 @@ package gemini
 import (
 	"errors"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"one-api/constant"
 	"one-api/dto"
 	"one-api/relay/channel"
 	relaycommon "one-api/relay/common"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Adaptor struct {
@@ -36,15 +37,19 @@ func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 		if info.ApiVersion != "" {
 			version = info.ApiVersion
 		} else {
-			version = "v1"
+			version = "v1beta"
 		}
 	}
 
 	action := "generateContent"
+	prefix := "models/"
 	if info.IsStream {
 		action = "streamGenerateContent?alt=sse"
 	}
-	return fmt.Sprintf("%s/%s/models/%s:%s", info.BaseUrl, version, info.UpstreamModelName, action), nil
+	if info.UpstreamModelName == "gemini-exp-1114" {
+		prefix = ""
+	}
+	return fmt.Sprintf("%s/%s/%s%s:%s", info.BaseUrl, version, prefix, info.UpstreamModelName, action), nil
 }
 
 func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Header, info *relaycommon.RelayInfo) error {
